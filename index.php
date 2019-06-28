@@ -37,6 +37,13 @@ if (!is_null($events['events'])) {
             curl_close($ch);
             echo $result . "";
         }
+        $actions = array (
+  New \LINE\LINEBot\TemplateActionBuilder\PostbackTemplateActionBuilder("yes", "ans=y"),
+  New \LINE\LINEBot\TemplateActionBuilder\PostbackTemplateActionBuilder("no", "ans=N")
+);
+$button = new \LINE\LINEBot\MessageBuilder\TemplateBuilder\ConfirmTemplateBuilder("confim message", $actions);
+$outputText = new \LINE\LINEBot\MessageBuilder\TemplateMessageBuilder("confim message", $button);
+$response = $bot->replyMessage($event->getReplyToken(), $outputText);
     }
 }
 echo "OK";
