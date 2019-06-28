@@ -1,63 +1,82 @@
 <?php
-
-$API_URL = 'https://api.line.me/v2/bot/message/reply';
-$ACCESS_TOKEN = 'T5OMx/29Ak4yNFiQI1GT+xbcgKhPWwpldUX27QyPZv2PjPx/w4ulCRSYDGcXd6BJtt6sNTxRxJczCzaexq6JLuFg24+HMN+0HoN8tb23Xsx+pcQuZJOmJy4SV633uniNbhQhnq2y01r8A4etpsGzsQdB04t89/1O/w1cDnyilFU='; // Access Token ค่าที่เราสร้างขึ้น
-$POST_HEADER = array('Content-Type: application/json', 'Authorization: Bearer ' . $ACCESS_TOKEN);
-
-$request = file_get_contents('php://input');   // Get request content
-$request_array = json_decode($request, true);   // Decode JSON to Array
-
-if ( sizeof($request_array['events']) > 0 )
-{
-
- foreach ($request_array['events'] as $event)
- {
-  $reply_message = '';
-  $reply_token = $event['replyToken'];
-
-  if ( $event['type'] == 'message' ) 
-  {
-   if( $event['message']['type'] == 'text' )
-   {
-    $text = $event['message']['text'];
-    $reply_message = 'ระบบได้รับข้อความ ('.$text.') ของคุณแล้ว';
-   }
-   else
-    $reply_message = 'ระบบได้รับ '.ucfirst($event['message']['type']).' ของคุณแล้ว';
+require_once '../vendor/autoload.php';
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
+use Monolog\Handler\FirePHPHandler;
+$logger = new Logger('LineBot');
+$logger->pushHandler(new StreamHandler('php://stderr', Logger::DEBUG));
+$httpClient = new \LINE\LINEBot\HTTPClient\CurlHTTPClient($_ENV["LINEBOT_ACCESS_TOKEN"]);
+$bot = new \LINE\LINEBot($httpClient, ['channelSecret' => $_ENV["LINEBOT_CHANNEL_SECRET"]]);
+$signature = $_SERVER['HTTP_' . \LINE\LINEBot\Constant\HTTPHeader::LINE_SIGNATURE];
+try {
+  $events = $bot->parseEventRequest(file_get_contents('php://input'), $signature);
+} catch(\LINE\LINEBot\Exception\InvalidSignatureException $e) {
+  error_log('parseEventRequest failed. InvalidSignatureException => '.var_export($e, true));
+} catch(\LINE\LINEBot\Exception\UnknownEventTypeException $e) {
+  error_log('parseEventRequest failed. UnknownEventTypeException => '.var_export($e, true));
+} catch(\LINE\LINEBot\Exception\UnknownMessageTypeException $e) {
+  error_log('parseEventRequest failed. UnknownMessageTypeException => '.var_export($e, true));
+} catch(\LINE\LINEBot\Exception\InvalidEventRequestException $e) {
+  error_log('parseEventRequest failed. InvalidEventRequestException => '.var_export($e, true));
+}
+foreach ($events as $event) {
+  // Postback Event
+  if (($event instanceof \LINE\LINEBot\Event\PostbackEvent)) {
+    $logger->info('Postback message has come');
+    continue;
+  }
+  // Location Event
+  if  ($event instanceof LINE\LINEBot\Event\MessageEvent\LocationMessage) {
+    $logger->info("location -> ".$event->getLatitude().",".$event->getLongitude());
+    continue;
+  }
   
+  // Message Event = TextMessage
+  if (($event instanceof \LINE\LINEBot\Event\MessageEvent\TextMessage)) {
+    // get message text
+    $messageText=strtolower(trim($event->getText()));
+    
   }
-  else
-   $reply_message = 'ระบบได้รับ Event '.ucfirst($event['type']).' ของคุณแล้ว';
- 
-  if( strlen($reply_message) > 0 )
-  {
-   //$reply_message = iconv("tis-620","utf-8",$reply_message);
-   $data = [
-    'replyToken' => $reply_token,
-    'messages' => [['type' => 'text', 'text' => $reply_message]]
-   ];
-   $post_body = json_encode($data, JSON_UNESCAPED_UNICODE);
+} 
 
-   $send_result = send_reply_message($API_URL, $POST_HEADER, $post_body);
-   echo "Result: ".$send_result."\r\n";
+<?php
+require_once '../vendor/autoload.php';
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
+use Monolog\Handler\FirePHPHandler;
+$logger = new Logger('LineBot');
+$logger->pushHandler(new StreamHandler('php://stderr', Logger::DEBUG));
+$httpClient = new \LINE\LINEBot\HTTPClient\CurlHTTPClient($_ENV["LINEBOT_ACCESS_TOKEN"]);
+$bot = new \LINE\LINEBot($httpClient, ['channelSecret' => $_ENV["LINEBOT_CHANNEL_SECRET"]]);
+$signature = $_SERVER['HTTP_' . \LINE\LINEBot\Constant\HTTPHeader::LINE_SIGNATURE];
+try {
+  $events = $bot->parseEventRequest(file_get_contents('php://input'), $signature);
+} catch(\LINE\LINEBot\Exception\InvalidSignatureException $e) {
+  error_log('parseEventRequest failed. InvalidSignatureException => '.var_export($e, true));
+} catch(\LINE\LINEBot\Exception\UnknownEventTypeException $e) {
+  error_log('parseEventRequest failed. UnknownEventTypeException => '.var_export($e, true));
+} catch(\LINE\LINEBot\Exception\UnknownMessageTypeException $e) {
+  error_log('parseEventRequest failed. UnknownMessageTypeException => '.var_export($e, true));
+} catch(\LINE\LINEBot\Exception\InvalidEventRequestException $e) {
+  error_log('parseEventRequest failed. InvalidEventRequestException => '.var_export($e, true));
+}
+foreach ($events as $event) {
+  // Postback Event
+  if (($event instanceof \LINE\LINEBot\Event\PostbackEvent)) {
+    $logger->info('Postback message has come');
+    continue;
   }
- }
-}
+  // Location Event
+  if  ($event instanceof LINE\LINEBot\Event\MessageEvent\LocationMessage) {
+    $logger->info("location -> ".$event->getLatitude().",".$event->getLongitude());
+    continue;
+  }
+  
+  // Message Event = TextMessage
+  if (($event instanceof \LINE\LINEBot\Event\MessageEvent\TextMessage)) {
+    // get message text
+    $messageText=strtolower(trim($event->getText()));
+    
+  }
+} 
 
-echo "OK";
-
-function send_reply_message($url, $post_header, $post_body)
-{
- $ch = curl_init($url);
- curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
- curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
- curl_setopt($ch, CURLOPT_HTTPHEADER, $post_header);
- curl_setopt($ch, CURLOPT_POSTFIELDS, $post_body);
- curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
- $result = curl_exec($ch);
- curl_close($ch);
-
- return $result;
-}
-
-?>
