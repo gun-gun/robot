@@ -46,4 +46,4 @@ $outputText = new \LINE\LINEBot\MessageBuilder\TemplateMessageBuilder("confim me
 $response = $bot->replyMessage($event->getReplyToken(), $outputText);
     }
 }
-echo "OK";
+echo "OK robot";
