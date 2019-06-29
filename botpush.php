@@ -1,5 +1,5 @@
 <?php
-$access_token = 'T5OMx/29Ak4yNFiQI1GT+xbcgKhPWwpldUX27QyPZv2PjPx/w4ulCRSYDGcXd6BJtt6sNTxRxJczCzaexq6JLuFg24+HMN+0HoN8tb23Xsx+pcQuZJOmJy4SV633uniNbhQhnq2y01r8A4etpsGzsQdB04t89/1O/w1cDnyilFU=';
+$access_token = 'wedasdasdadd';
 // Get POST body content
 $content = file_get_contents('php://input');
 // Parse JSON
@@ -39,4 +39,4 @@ if (!is_null($events['events'])) {
         }
     }
 }
-echo "OK";
+echo "OK bot";
